@@ -6,7 +6,7 @@
  * @property {?string} description The scheduled event description
  * @property {?Date} endTime The end time of the event
  * @property {?string} location The location of the event
- * @property {?string} callType The type of a WhatsApp call link to generate, valid values are: `video` | `voice`
+ * @property {?string} callType The type of a WhatsApp call link to generate, valid values are: `video` | `voice` | `none`
  * @property {boolean} [isEventCanceled = false] Indicates if a scheduled event should be sent as an already canceled
  * @property {?Array<number>} messageSecret The custom message secret, can be used as an event ID. NOTE: it has to be a unique vector with a length of 32
  */
@@ -37,11 +37,13 @@ class ScheduledEvent {
          */
         this.eventSendOptions = {
             description: options.description?.trim(),
-            endTimeTs: options.endTime ? Math.floor(options.endTime.getTime() / 1000) : null,
+            endTimeTs: options.endTime
+                ? Math.floor(options.endTime.getTime() / 1000)
+                : null,
             location: options.location?.trim(),
             callType: this._validateInputs('callType', options.callType),
             isEventCanceled: options.isEventCanceled ?? false,
-            messageSecret: options.messageSecret
+            messageSecret: options.messageSecret,
         };
     }
 
@@ -53,17 +55,27 @@ class ScheduledEvent {
      */
     _validateInputs(propName, propValue) {
         if (propName === 'name' && !propValue) {
-            throw new class CreateScheduledEventError extends Error {
-                constructor(m) { super(m); }
-            }(`Empty '${propName}' parameter value is provided.`);
+            throw new (class CreateScheduledEventError extends Error {
+                constructor(m) {
+                    super(m);
+                }
+            })(`Empty '${propName}' parameter value is provided.`);
         }
 
-        if (propName === 'callType' && propValue && !['video', 'voice'].includes(propValue)) {
-            throw new class CreateScheduledEventError extends Error {
-                constructor(m) { super(m); }
-            }(`Invalid '${propName}' parameter value is provided. Valid values are: 'voice' | 'video'.`);
+        if (
+            propName === 'callType' &&
+            propValue &&
+            !['video', 'voice', 'none'].includes(propValue)
+        ) {
+            throw new (class CreateScheduledEventError extends Error {
+                constructor(m) {
+                    super(m);
+                }
+            })(
+                `Invalid '${propName}' parameter value is provided. Valid values are: 'voice' | 'video' | 'none'.`,
+            );
         }
-        
+
         return propValue;
     }
 }
